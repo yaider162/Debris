@@ -1,5 +1,6 @@
 use iced::widget::canvas::{self, Event, Cache};
 use iced::{mouse, Rectangle, Renderer, Theme};
+
 use crate::World;
 use crate::particles::world::Cell;
 use crate::message::Message;
@@ -19,16 +20,8 @@ impl Default for CanvasState{
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum MessageUI {
-    CanvasMouseMove(Point),
-    CanvasMouseClick(Point),
-}
-
-impl canvas::Program<MessageUI> for MyCanvas<'_> {
-    type State = CanvasState;
 impl canvas::Program<Message> for MyCanvas<'_> {
-    type State = ();
+    type State = CanvasState;
 
     fn draw(
         &self,
@@ -77,16 +70,13 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                 current_position.map(|point| {
                     if _state.is_clicked{
                         canvas::Action::publish(
-                            MessageUI::CanvasMouseClick(point),
+                            Message::CanvasMouseClick(point),
                         )
                     }else{
                         canvas::Action::publish(
-                            MessageUI::CanvasMouseMove(point),
+                            Message::CanvasMouseMove(point),
                         )
                     }
-                    canvas::Action::publish(
-                        Message::CanvasMouseMove(point),
-                    )
                 })
             }
 
