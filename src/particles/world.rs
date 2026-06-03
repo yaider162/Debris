@@ -5,14 +5,14 @@ enum Cell {
     Wall,
 }
 
-struct world {
+pub struct World {
     particles: Vec<Cell>,
     width: usize,
     height: usize,
 }
 
-impl world {
-    fn new(width: usize, height:usize) -> Self {
+impl World {
+    pub fn new(width: usize, height:usize) -> Self {
         Self { particles: vec![Cell::Nothing; width*height], width, height }
     }
 

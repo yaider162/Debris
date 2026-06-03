@@ -3,6 +3,7 @@ use iced::widget::canvas;
 use iced::Element;
 
 use view::ui::{MyCanvas,MessageUI};
+use particles::world::World;
 
 // Módulos
 mod particles;
@@ -21,19 +22,20 @@ fn view(){
 }
 
 struct App{
-    canvas:MyCanvas
+    canvas:MyCanvas,
+    world:World
 }
 
 impl Default for App{
     fn default()->Self{
-        Self{canvas:MyCanvas{}}
+        Self{canvas:MyCanvas{},world:World::new(80,60)}
     }
 }
 
 impl App{
 
     fn new()->Self{
-        Self { canvas:  MyCanvas{}}
+        Self { canvas:  MyCanvas{},world:World::new(80,60)}
     }
 
     fn update(&mut self,message:MessageUI){
