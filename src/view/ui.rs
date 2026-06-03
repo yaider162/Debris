@@ -7,6 +7,16 @@ pub struct MyCanvas<'a>{
     pub world: &'a World,
 }
 
+pub struct CanvasState{
+    pub is_clicked:bool,
+}
+
+impl Default for CanvasState{
+    fn default()->Self{
+        Self{is_clicked:false}
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum MessageUI {
     CanvasMouseMove(Point),
@@ -14,11 +24,11 @@ pub enum MessageUI {
 }
 
 impl canvas::Program<MessageUI> for MyCanvas<'_> {
-    type State = ();
+    type State = CanvasState;
 
     fn draw(
         &self,
-        _state: &(),
+        _state: &CanvasState,
         renderer: &Renderer,
         _theme: &Theme,
         bounds: Rectangle,
@@ -63,9 +73,15 @@ impl canvas::Program<MessageUI> for MyCanvas<'_> {
         match event {
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
                 current_position.map(|point| {
-                    canvas::Action::publish(
-                        MessageUI::CanvasMouseMove(point),
-                    )
+                    if _state.is_clicked{
+                        canvas::Action::publish(
+                            MessageUI::CanvasMouseClick(point),
+                        )
+                    }else{
+                        canvas::Action::publish(
+                            MessageUI::CanvasMouseMove(point),
+                        )
+                    }
                 })
             }
 
@@ -73,10 +89,18 @@ impl canvas::Program<MessageUI> for MyCanvas<'_> {
                 mouse::Button::Left,
             )) => {
                 current_position.map(|point| {
+                    _state.is_clicked=true;
                     canvas::Action::publish(
                         MessageUI::CanvasMouseClick(point),
                     )
                 })
+            }
+
+            Event::Mouse(mouse::Event::ButtonReleased(
+                mouse::Button::Left,
+            )) => {
+                _state.is_clicked=false;
+                None
             }
 
             _ => None,
