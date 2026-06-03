@@ -17,11 +17,11 @@ impl World {
     }
 
     // Funcion para indexar como 2d
-    fn index(&self, x: usize, y:usize) -> usize {
+    pub fn index(&self, x: usize, y:usize) -> usize {
         y*self.width+x
     }
 
-    fn update(&mut self, x:usize, y:usize){
+    pub fn update(&mut self, x:usize, y:usize){
         let last = self.particles.clone();
 
         // Itero de abajo a arriba para actualizar estado
