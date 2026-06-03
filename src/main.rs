@@ -1,9 +1,11 @@
-use iced::{debug, widget::{Canvas, Column, button, column, text}};
+use iced::{debug, widget::{Canvas, Column, button, column, text}, window::UserAttention};
 use iced::widget::canvas;
 use iced::Element;
 
 use view::ui::{MyCanvas,MessageUI};
 use particles::world::World;
+
+use crate::particles::world;
 
 // Módulos
 mod particles;
@@ -12,40 +14,37 @@ mod view;
 
 
 fn main() -> iced::Result{
-    let app= App::new();
     iced::run(App::update, App::view)
 }
 
 
-fn view(){
-
-}
-
 struct App{
-    canvas:MyCanvas,
     world:World
 }
 
 impl Default for App{
     fn default()->Self{
-        Self{canvas:MyCanvas{},world:World::new(80,60)}
+        Self{world:World::new(80,60)}
     }
 }
 
 impl App{
 
-    fn new()->Self{
-        Self { canvas:  MyCanvas{},world:World::new(80,60)}
-    }
-
     fn update(&mut self,message:MessageUI){
         match message {
             MessageUI::CanvasMouseMove(point) => {println!("{:?}", point);}
-            MessageUI::CanvasMouseClick(point) => {println!("Click en {:?}", point);}
+            MessageUI::CanvasMouseClick(point) => {
+                println!("Click en {:?}", point);
+                let x = (point.x/self.world.cell_size) as usize;
+                let y = (point.y/self.world.cell_size) as usize;
+                self.world.set_cell(x, y, world::Cell::Sand);
+            }
         }
     }
 
     fn view(&self)->Element<MessageUI>{
-        canvas(&self.canvas).into()
+        canvas(MyCanvas {
+            world: &self.world
+        }).width(iced::Fill).height(iced::Fill).into()
     }
 }

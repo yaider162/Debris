@@ -1,7 +1,11 @@
 use iced::widget::canvas::{self, Event};
-use iced::{mouse, Color, Point, Rectangle, Renderer, Theme};
+use iced::{mouse, Point, Rectangle, Renderer, Theme};
+use crate::World;
+use crate::particles::world::Cell;
 
-pub struct MyCanvas;
+pub struct MyCanvas<'a>{
+    pub world: &'a World,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum MessageUI {
@@ -9,7 +13,7 @@ pub enum MessageUI {
     CanvasMouseClick(Point),
 }
 
-impl canvas::Program<MessageUI> for MyCanvas {
+impl canvas::Program<MessageUI> for MyCanvas<'_> {
     type State = ();
 
     fn draw(
@@ -22,12 +26,27 @@ impl canvas::Program<MessageUI> for MyCanvas {
     ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
 
-        let rect = canvas::Path::rectangle(
-            Point::ORIGIN,
-            bounds.size(),
-        );
+        for y in 0..self.world.height {
+            for x in 0..self.world.width {
+                let idx = self.world.index(x, y);
 
-        frame.fill(&rect, Color::from_rgb(0.2, 0.4, 0.8));
+                let color = match self.world.particles[idx] {
+                    Cell::Nothing => continue,
+                    Cell::Sand => iced::Color::from_rgb(0.9, 0.8, 0.3),
+                    Cell::Wall => iced::Color::from_rgb(0.4, 0.4, 0.4),
+                };
+
+                let rect = canvas::Path::rectangle(
+                    iced::Point::new(
+                        x as f32 * self.world.cell_size,
+                        y as f32 * self.world.cell_size,
+                    ),
+                    iced::Size::new(self.world.cell_size, self.world.cell_size),
+                );
+
+                frame.fill(&rect, color);
+            }
+        }
 
         vec![frame.into_geometry()]
     }
