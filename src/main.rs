@@ -1,5 +1,7 @@
 use iced::{debug, widget::{Column, button, column, text}};
 
+// Módulos
+mod particles;
 
 fn main() -> iced::Result{
     iced::run(Counter::update, Counter::view)
