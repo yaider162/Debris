@@ -3,7 +3,7 @@ use crate::particles::world::Cell;
 use iced::mouse::{Button as MouseButton, Event as MouseEvent};
 use iced::keyboard::{Key, Event as KeyEvent};
 use iced::widget::canvas::Event::{Mouse,Keyboard};
-use iced::widget::canvas::{self, Event};
+use iced::widget::canvas::{self, Cache, Event};
 use iced::{Point, Rectangle, Renderer, Theme, mouse};
 
 type Action = canvas::Action<MessageUI>;
