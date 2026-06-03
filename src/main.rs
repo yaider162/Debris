@@ -1,12 +1,48 @@
-use iced::{debug, widget::{Column, button, column, text}};
+use iced::{debug, widget::{Canvas, Column, button, column, text}};
+use iced::widget::canvas;
+use iced::Element;
+
+use view::ui::{MyCanvas,MessageUI};
 
 // Módulos
 mod particles;
 mod logic;
+mod view;
 
 
 fn main() -> iced::Result{
-    iced::run(Counter::update, Counter::view)
+    let app= App::new();
+    iced::run(App::update, App::view)
+}
+
+
+fn view(){
+
+}
+
+struct App{
+    canvas:MyCanvas
+}
+
+impl Default for App{
+    fn default()->Self{
+        Self{canvas:MyCanvas{}}
+    }
+}
+
+impl App{
+
+    fn new()->Self{
+        Self { canvas:  MyCanvas{}}
+    }
+
+    fn update(&mut self,message:MessageUI){
+        //todo
+    }
+
+    fn view(&self)->Element<MessageUI>{
+        canvas(&self.canvas).into()
+    }
 }
 
 #[derive(Default)]
