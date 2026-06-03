@@ -7,9 +7,11 @@ use iced::widget::canvas::{self, Event};
 use iced::{Point, Rectangle, Renderer, Theme, mouse};
 
 type Action = canvas::Action<MessageUI>;
+use crate::message::Message;
 
 pub struct MyCanvas<'a> {
     pub world: &'a World,
+    pub cache: &'a Cache,
 }
 
 pub struct CanvasState {
@@ -39,33 +41,31 @@ impl canvas::Program<MessageUI> for MyCanvas<'_> {
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
-        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let geometry = self.cache.draw(renderer, bounds.size(), |frame| {
+            for y in 0..self.world.height {
+                for x in 0..self.world.width {
+                    let idx = self.world.index(x, y);
 
-        for y in 0..self.world.height {
-            for x in 0..self.world.width {
-                let idx = self.world.index(x, y);
+                    let color = match self.world.particles[idx] {
+                        Cell::Nothing => continue,
+                        Cell::Sand => iced::Color::from_rgb(0.9, 0.8, 0.3),
+                        Cell::Wall => iced::Color::from_rgb(0.4, 0.4, 0.4),
+                    };
 
-                let color = match self.world.particles[idx] {
-                    Cell::Nothing => continue,
-                    Cell::Sand => iced::Color::from_rgb(0.9, 0.8, 0.3),
-                    Cell::Wall => iced::Color::from_rgb(0.4, 0.4, 0.4),
-                };
+                    let rect = canvas::Path::rectangle(
+                        iced::Point::new(
+                            x as f32 * self.world.cell_size,
+                            y as f32 * self.world.cell_size,
+                        ),
+                        iced::Size::new(self.world.cell_size, self.world.cell_size),
+                    );
 
-                let rect = canvas::Path::rectangle(
-                    iced::Point::new(
-                        x as f32 * self.world.cell_size,
-                        y as f32 * self.world.cell_size,
-                    ),
-                    iced::Size::new(self.world.cell_size, self.world.cell_size),
-                );
-
-                frame.fill(&rect, color);
+                    frame.fill(&rect, color);
+                }
             }
-        }
-
-        vec![frame.into_geometry()]
+        });
+        vec![geometry]
     }
-
     fn update(
         &self,
         _state: &mut Self::State,

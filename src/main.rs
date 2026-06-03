@@ -1,39 +1,45 @@
-use iced::{debug, widget::{Canvas, Column, button, column, text}, window::UserAttention};
 use iced::widget::canvas;
-use iced::Element;
+use iced::{Element, Program};
+use iced::{Subscription, time};
 
-use view::ui::{MyCanvas,MessageUI};
+use view::ui::{MyCanvas};
 use particles::world::World;
-
 use crate::particles::world;
+use crate::message::Message;
+use std::time::Duration;
 
 // Módulos
 mod particles;
 mod logic;
 mod view;
+mod message;
 
-
-fn main() -> iced::Result{
-    iced::run(App::update, App::view)
+fn main() -> iced::Result {
+    iced::application(App::default, App::update, App::view)
+        .subscription(App::subscription).run()
 }
 
 
 struct App{
-    world:World
+    world:World,
+    canvas_cache: canvas::Cache,
 }
 
 impl Default for App{
     fn default()->Self{
-        Self{world:World::new(80,60)}
+        Self{world:World::new(80,60), canvas_cache: canvas::Cache::default()}
     }
 }
 
 impl App{
-
-    fn update(&mut self,message:MessageUI){
+    fn update(&mut self,message:Message){
         match message {
-            MessageUI::CanvasMouseMove(point) => {println!("{:?}", point);}
-            MessageUI::CanvasMouseClick(point) => {
+            Message::Tick => {
+                self.world.update();
+                self.canvas_cache.clear();
+            }
+            Message::CanvasMouseMove(point) => {println!("{:?}", point);}
+            Message::CanvasMouseClick(point) => {
                 println!("Click en {:?}", point);
                 let x = (point.x/self.world.cell_size) as usize;
                 let y = (point.y/self.world.cell_size) as usize;
@@ -42,9 +48,15 @@ impl App{
         }
     }
 
-    fn view(&self)->Element<MessageUI>{
+    fn view(&self)->Element<Message>{
         canvas(MyCanvas {
-            world: &self.world
+            world: &self.world,
+            cache: &self.canvas_cache
         }).width(iced::Fill).height(iced::Fill).into()
     }
+
+
+    fn subscription(state: &Self) -> Subscription<Message> {
+        time::every(Duration::from_millis(16)).map(|_| Message::Tick)
+    }   
 }
