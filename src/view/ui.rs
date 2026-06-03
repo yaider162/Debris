@@ -1,19 +1,24 @@
-use iced::widget::canvas::{self, Event};
-use iced::{mouse, Point, Rectangle, Renderer, Theme};
 use crate::World;
 use crate::particles::world::Cell;
+use iced::mouse::{Button as MouseButton, Event as MouseEvent};
+use iced::keyboard::{Key, Event as KeyEvent};
+use iced::widget::canvas::Event::{Mouse,Keyboard};
+use iced::widget::canvas::{self, Event};
+use iced::{Point, Rectangle, Renderer, Theme, mouse};
 
-pub struct MyCanvas<'a>{
+type Action = canvas::Action<MessageUI>;
+
+pub struct MyCanvas<'a> {
     pub world: &'a World,
 }
 
-pub struct CanvasState{
-    pub is_clicked:bool,
+pub struct CanvasState {
+    pub is_clicked: bool,
 }
 
-impl Default for CanvasState{
-    fn default()->Self{
-        Self{is_clicked:false}
+impl Default for CanvasState {
+    fn default() -> Self {
+        Self { is_clicked: false }
     }
 }
 
@@ -28,7 +33,7 @@ impl canvas::Program<MessageUI> for MyCanvas<'_> {
 
     fn draw(
         &self,
-        _state: &CanvasState,
+        _state: &Self::State,
         renderer: &Renderer,
         _theme: &Theme,
         bounds: Rectangle,
@@ -67,43 +72,43 @@ impl canvas::Program<MessageUI> for MyCanvas<'_> {
         event: &Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
-    ) -> Option<canvas::Action<MessageUI>> {
+    ) -> Option<Action> {
         let current_position = cursor.position_in(bounds);
 
         match event {
-            Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-                current_position.map(|point| {
-                    if _state.is_clicked{
-                        canvas::Action::publish(
-                            MessageUI::CanvasMouseClick(point),
-                        )
-                    }else{
-                        canvas::Action::publish(
-                            MessageUI::CanvasMouseMove(point),
-                        )
-                    }
-                })
+            Mouse(MouseEvent::CursorMoved { .. }) => {
+                current_position.map(|point| on_cursor_moved(point, _state))
             }
 
-            Event::Mouse(mouse::Event::ButtonPressed(
-                mouse::Button::Left,
-            )) => {
-                current_position.map(|point| {
-                    _state.is_clicked=true;
-                    canvas::Action::publish(
-                        MessageUI::CanvasMouseClick(point),
-                    )
-                })
+            Mouse(MouseEvent::ButtonPressed(MouseButton::Left)) => {
+                current_position.map(|point| on_cursor_click(point, _state))
             }
 
-            Event::Mouse(mouse::Event::ButtonReleased(
-                mouse::Button::Left,
-            )) => {
-                _state.is_clicked=false;
+            Mouse(MouseEvent::ButtonReleased(MouseButton::Left)) => {
+                on_cursor_leave(_state);
                 None
             }
+
+            
 
             _ => None,
         }
     }
+}
+
+fn on_cursor_moved(point: Point, state: &CanvasState) -> Action {
+    if state.is_clicked {
+        canvas::Action::publish(MessageUI::CanvasMouseClick(point))
+    } else {
+        canvas::Action::publish(MessageUI::CanvasMouseMove(point))
+    }
+}
+
+fn on_cursor_click(point: Point, state: &mut CanvasState) -> Action {
+    state.is_clicked = true;
+    canvas::Action::publish(MessageUI::CanvasMouseClick(point))
+}
+
+fn on_cursor_leave(state: &mut CanvasState) {
+    state.is_clicked = false;
 }
