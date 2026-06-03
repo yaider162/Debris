@@ -1,13 +1,14 @@
 use crate::World;
 use crate::particles::world::Cell;
+use crate::message::Message;
+
 use iced::mouse::{Button as MouseButton, Event as MouseEvent};
 use iced::keyboard::{Key, Event as KeyEvent};
 use iced::widget::canvas::Event::{Mouse,Keyboard};
 use iced::widget::canvas::{self, Cache, Event};
 use iced::{Point, Rectangle, Renderer, Theme, mouse};
 
-type Action = canvas::Action<MessageUI>;
-use crate::message::Message;
+type Action = canvas::Action<Message>;
 
 pub struct MyCanvas<'a> {
     pub world: &'a World,
@@ -24,13 +25,7 @@ impl Default for CanvasState {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum MessageUI {
-    CanvasMouseMove(Point),
-    CanvasMouseClick(Point),
-}
-
-impl canvas::Program<MessageUI> for MyCanvas<'_> {
+impl canvas::Program<Message> for MyCanvas<'_> {
     type State = CanvasState;
 
     fn draw(
@@ -98,15 +93,15 @@ impl canvas::Program<MessageUI> for MyCanvas<'_> {
 
 fn on_cursor_moved(point: Point, state: &CanvasState) -> Action {
     if state.is_clicked {
-        canvas::Action::publish(MessageUI::CanvasMouseClick(point))
+        canvas::Action::publish(Message::CanvasMouseClick(point))
     } else {
-        canvas::Action::publish(MessageUI::CanvasMouseMove(point))
+        canvas::Action::publish(Message::CanvasMouseMove(point))
     }
 }
 
 fn on_cursor_click(point: Point, state: &mut CanvasState) -> Action {
     state.is_clicked = true;
-    canvas::Action::publish(MessageUI::CanvasMouseClick(point))
+    canvas::Action::publish(Message::CanvasMouseClick(point))
 }
 
 fn on_cursor_leave(state: &mut CanvasState) {

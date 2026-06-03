@@ -48,6 +48,7 @@ impl App{
         }
     }
 
+
     fn view(&self)->Element<Message>{
         canvas(MyCanvas {
             world: &self.world,
