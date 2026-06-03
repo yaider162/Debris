@@ -9,12 +9,30 @@ pub struct MyCanvas<'a>{
     pub cache: &'a Cache,
 }
 
+pub struct CanvasState{
+    pub is_clicked:bool,
+}
+
+impl Default for CanvasState{
+    fn default()->Self{
+        Self{is_clicked:false}
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum MessageUI {
+    CanvasMouseMove(Point),
+    CanvasMouseClick(Point),
+}
+
+impl canvas::Program<MessageUI> for MyCanvas<'_> {
+    type State = CanvasState;
 impl canvas::Program<Message> for MyCanvas<'_> {
     type State = ();
 
     fn draw(
         &self,
-        _state: &(),
+        _state: &CanvasState,
         renderer: &Renderer,
         _theme: &Theme,
         bounds: Rectangle,
@@ -57,6 +75,15 @@ impl canvas::Program<Message> for MyCanvas<'_> {
         match event {
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
                 current_position.map(|point| {
+                    if _state.is_clicked{
+                        canvas::Action::publish(
+                            MessageUI::CanvasMouseClick(point),
+                        )
+                    }else{
+                        canvas::Action::publish(
+                            MessageUI::CanvasMouseMove(point),
+                        )
+                    }
                     canvas::Action::publish(
                         Message::CanvasMouseMove(point),
                     )
@@ -67,10 +94,25 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                 mouse::Button::Left,
             )) => {
                 current_position.map(|point| {
+                    _state.is_clicked=true;
                     canvas::Action::publish(
                         Message::CanvasMouseClick(point),
                     )
                 })
+            }
+
+            Event::Mouse(mouse::Event::ButtonReleased(
+                mouse::Button::Left,
+            )) => {
+                _state.is_clicked=false;
+                None
+            }
+
+            Event::Mouse(mouse::Event::ButtonReleased(
+                mouse::Button::Left,
+            )) => {
+                _state.is_clicked=false;
+                None
             }
 
             _ => None,
