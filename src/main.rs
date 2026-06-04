@@ -128,7 +128,10 @@ impl App{
                                 self.world.set_cell(x as usize, y as usize, self.actual_cell);
                             }
                         }
-                    } else {
+                    } else if self.actual_cell == world::Cell::Nothing{
+                        self.world.set_cell(x as usize, y as usize, self.actual_cell);
+                    } 
+                    else {
                         // Por ahora, este es cuando es pared
                         if target_cell_value != world::Cell::Wall{
                             self.world.set_cell(x as usize, y as usize, self.actual_cell);
