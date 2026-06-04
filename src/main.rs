@@ -130,7 +130,6 @@ impl App{
         let center_x = (point.x/self.world.cell_size) as isize;
         let center_y = (point.y/self.world.cell_size) as isize;
         let radius = self.brush_size;
-                    
         for dy in -radius..=radius {
             for dx in -radius..=radius {
                 
