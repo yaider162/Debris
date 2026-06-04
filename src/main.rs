@@ -1,5 +1,5 @@
-use iced::widget::{canvas, column,text};
-use iced::{Element, Program};
+use iced::widget::{canvas,text};
+use iced::{Element};
 use iced::{Subscription, time};
 
 use view::ui::{MyCanvas};
@@ -10,7 +10,6 @@ use std::time::Duration;
 
 // Módulos
 mod particles;
-mod logic;
 mod view;
 mod message;
 
@@ -28,7 +27,7 @@ struct App{
 
 impl Default for App{
     fn default()->Self{
-        Self{world:World::new(80,60), canvas_cache: canvas::Cache::default(),actual_cell: world::Cell::Sand }
+        Self{world:World::new(800,600), canvas_cache: canvas::Cache::default(),actual_cell: world::Cell::Sand }
     }
 }
 
@@ -39,9 +38,8 @@ impl App{
                 self.world.update();
                 self.canvas_cache.clear();
             }
-            Message::CanvasMouseMove(point) => {println!("{:?}", point);}
+            Message::CanvasMouseMove(_point) => {}
             Message::CanvasMouseClick(point) => {
-                println!("Click en {:?}", point);
                 let x = (point.x/self.world.cell_size) as usize;
                 let y = (point.y/self.world.cell_size) as usize;
                 self.world.set_cell(x, y, self.actual_cell);
@@ -51,15 +49,13 @@ impl App{
                 self.actual_cell=match val{
                     Command::SetSandCell=>world::Cell::Sand,
                     Command::SetWallCell=>world::Cell::Wall,
-                    _=>world::Cell::Sand
                 }
             }
-            _=>{}
         }
     }
 
 
-    fn view(&self)->Element<Message>{
+    fn view(&self)-> Element<'_, Message>{
         iced::widget::Column::new()
             .push(text(format!("Partículas: {}", self.particle_count())))
             .push(
@@ -75,7 +71,7 @@ impl App{
     }
 
 
-    fn subscription(state: &Self) -> Subscription<Message> {
+    fn subscription(_state: &Self) -> Subscription<Message> {
         time::every(Duration::from_millis(16)).map(|_| Message::Tick)
     }
     pub fn particle_count(&self) -> usize{

@@ -2,8 +2,7 @@ use crate::World;
 use crate::message::{Command, Message};
 use crate::particles::world::Cell;
 
-use iced::futures::FutureExt;
-use iced::keyboard::{Event as KeyEvent, Key};
+use iced::keyboard::{Event as KeyEvent};
 use iced::mouse::{Button as MouseButton, Event as MouseEvent};
 use iced::widget::canvas::Event::{Keyboard, Mouse};
 use iced::widget::canvas::{self, Cache, Event};
@@ -90,7 +89,7 @@ impl canvas::Program<Message> for MyCanvas<'_> {
 impl MyCanvas<'_>{
     fn cell_color(&self, cell: Cell) -> Option<iced::Color>{
         match cell {
-            Cell::Nothing => None,
+            Cell::Nothing => Some(iced::Color::from_rgb(0.0, 0.0, 0.0)),
             Cell::Sand => Some(iced::Color::from_rgb(0.9, 0.8, 0.3)),
             Cell::Wall => Some(iced::Color::from_rgb(0.4, 0.4, 0.4))
         }

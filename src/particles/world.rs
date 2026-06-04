@@ -16,7 +16,7 @@ pub struct World {
 
 impl World {
     pub fn new(width: usize, height:usize) -> Self {
-        Self { particles: vec![Cell::Nothing; width*height], width, height, cell_size: 10.0 }
+        Self { particles: vec![Cell::Nothing; width*height], width, height, cell_size: 1.0 }
     }
 
     // Funcion para indexar como 2d
@@ -58,8 +58,8 @@ impl World {
                         }
 
                         let diagonal = self.index(nx as usize, y + 1);
-                        let over_diagonal = self.index(nx as usize, y);
-                        if last[diagonal] == Cell::Nothing  && last[over_diagonal]==Cell::Nothing{
+                        //let over_diagonal = self.index(nx as usize, y); && last[over_diagonal]==Cell::Nothing
+                        if last[diagonal] == Cell::Nothing  {
                             self.particles[idx] = Cell::Nothing;
                             self.particles[diagonal] = Cell::Sand;
                             break;
