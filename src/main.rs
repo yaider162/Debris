@@ -1,4 +1,4 @@
-use iced::widget::canvas;
+use iced::widget::{canvas, column,text};
 use iced::{Element, Program};
 use iced::{Subscription, time};
 
@@ -60,14 +60,26 @@ impl App{
 
 
     fn view(&self)->Element<Message>{
-        canvas(MyCanvas {
-            world: &self.world,
-            cache: &self.canvas_cache
-        }).width(iced::Fill).height(iced::Fill).into()
+        iced::widget::Column::new()
+            .push(text(format!("Partículas: {}", self.particle_count())))
+            .push(
+                canvas(MyCanvas {
+                    world: &self.world,
+                    cache: &self.canvas_cache,
+                })
+                .width(iced::Fill)
+                .height(iced::Fill),
+            )
+            .spacing(10)
+            .into()
     }
 
 
     fn subscription(state: &Self) -> Subscription<Message> {
         time::every(Duration::from_millis(16)).map(|_| Message::Tick)
-    }   
+    }
+    pub fn particle_count(&self) -> usize{
+        self.world.particles.iter().filter(|&&c| c==self::world
+            ::Cell::Sand).count()
+    }
 }
