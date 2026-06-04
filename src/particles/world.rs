@@ -32,6 +32,8 @@ impl World {
             for x in 0..self.width {
                 let idx = self.index(x, y);
                 let under = self.index(x, y+1);
+                //let under_right = self.index(x+1,y+1);
+                //let under_left = self.index(x-1, y+1);
 
                 // logica de movimiento
                 if last[idx]==Cell::Sand{
@@ -56,8 +58,8 @@ impl World {
                         }
 
                         let diagonal = self.index(nx as usize, y + 1);
-
-                        if last[diagonal] == Cell::Nothing {
+                        let over_diagonal = self.index(nx as usize, y);
+                        if last[diagonal] == Cell::Nothing  && last[over_diagonal]==Cell::Nothing{
                             self.particles[idx] = Cell::Nothing;
                             self.particles[diagonal] = Cell::Sand;
                             break;
