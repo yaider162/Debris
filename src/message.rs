@@ -5,4 +5,11 @@ pub enum Message {
     CanvasMouseMove(Point),
     CanvasMouseClick(Point),
     Tick,
+    CanvasSendCommand(Command),
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Command{
+    SetSandCell,
+    SetWallCell,
 }

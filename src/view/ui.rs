@@ -1,10 +1,11 @@
 use crate::World;
+use crate::message::{Command, Message};
 use crate::particles::world::Cell;
-use crate::message::Message;
 
+use iced::futures::FutureExt;
+use iced::keyboard::{Event as KeyEvent, Key};
 use iced::mouse::{Button as MouseButton, Event as MouseEvent};
-use iced::keyboard::{Key, Event as KeyEvent};
-use iced::widget::canvas::Event::{Mouse,Keyboard};
+use iced::widget::canvas::Event::{Keyboard, Mouse};
 use iced::widget::canvas::{self, Cache, Event};
 use iced::{Point, Rectangle, Renderer, Theme, mouse};
 
@@ -68,7 +69,7 @@ impl canvas::Program<Message> for MyCanvas<'_> {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Option<Action> {
-        let current_position = cursor.position_in(bounds);
+        let current_position: Option<Point> = cursor.position_in(bounds);
 
         match event {
             Mouse(MouseEvent::CursorMoved { .. }) => {
@@ -84,9 +85,16 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                 None
             }
 
-            
+            Keyboard(KeyEvent::KeyPressed { key, .. }) => {
+                match key {
+                    iced::keyboard::Key::Character(s) => {
+                       Some(on_option_key_pressed(s.as_str()))
+                    }
+                    _ => None,
+                }
+            }
 
-            _ => None,
+            _ => on_non_action(current_position, _state),
         }
     }
 }
@@ -106,4 +114,21 @@ fn on_cursor_click(point: Point, state: &mut CanvasState) -> Action {
 
 fn on_cursor_leave(state: &mut CanvasState) {
     state.is_clicked = false;
+}
+
+fn on_non_action(point: Option<Point>, state: &mut CanvasState) -> Option<Action> {
+    if state.is_clicked {
+        point.map(|val| canvas::Action::publish(Message::CanvasMouseClick(val)))
+    } else {
+        None
+    }
+}
+
+fn on_option_key_pressed(s: &str) -> Action{
+    canvas::Action::publish(Message::CanvasSendCommand(
+        match s{
+            "2"=>Command::SetWallCell,
+            _=>Command::SetSandCell,
+        }
+    ))
 }
