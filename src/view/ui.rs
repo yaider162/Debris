@@ -13,6 +13,10 @@ type Action = canvas::Action<Message>;
 pub struct MyCanvas<'a> {
     pub world: &'a World,
     pub cache: &'a Cache,
+    
+    pub mouse_pos: Option<(isize, isize)>,
+    pub brush_size: isize,
+    pub actual_cell: Cell,
 }
 
 pub struct CanvasState {
@@ -56,6 +60,40 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                     );
                     }
                 }
+            }
+
+            // Aqui dibujo otras cosas
+            if let Some((mx,my)) = self.mouse_pos {
+                // El color del placeholder
+                let color = match self.actual_cell {
+                    Cell::Nothing => iced::Color::TRANSPARENT,
+                    Cell::Sand => iced::Color::from_rgba(0.9, 0.8, 0.3, 0.35),
+                    Cell::Wall => iced::Color::from_rgba(0.4, 0.4, 0.4,0.35),
+                };
+
+                let radius = self.brush_size;
+
+                for dy in -radius..=radius {
+                    for dx in -radius..=radius{
+
+                        if dx*dx + dy*dy > radius*radius { continue; }
+
+                        let px = mx + dx;
+                        let py = my + dy;
+
+                        if px >= 0 && px < self.world.width as isize && py >= 0 && py < self.world.height as isize {
+                            frame.fill_rectangle(
+                                iced::Point::new(
+                                    px as f32 * self.world.cell_size,
+                                    py as f32 * self.world.cell_size,
+                                ),
+                                size,
+                                color,
+                            );
+                        }
+                    }
+                }
+
             }
         });
         vec![geometry]

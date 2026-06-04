@@ -30,6 +30,9 @@ struct App{
 
     // Un pincel, este no es el tamaño como tal, es el radio q ocupa
     brush_size: isize,
+
+    // La posicion del mouse para el placeholder
+    mouse_pos: Option<(isize,isize)>,
 }
 
 impl Default for App{
@@ -40,6 +43,7 @@ impl Default for App{
             spawn_last: Instant::now(),
             spawn_cooldown: Duration::from_millis(10),
             brush_size: 2,
+            mouse_pos: None,
         }
     }
 }
@@ -51,8 +55,18 @@ impl App{
                 self.world.update();
                 self.canvas_cache.clear();
             }
-            Message::CanvasMouseMove(_point) => {}
+            Message::CanvasMouseMove(point) => {
+                let x = (point.x / self.world.cell_size) as isize;
+                let y = (point.y / self.world.cell_size) as isize;
+                self.mouse_pos = Some((x, y));
+                self.canvas_cache.clear();
+            }
             Message::CanvasMouseClick(point) => {
+                
+                let x = (point.x / self.world.cell_size) as isize;
+                let y = (point.y / self.world.cell_size) as isize;
+                self.mouse_pos = Some((x, y));
+
                 if self.spawn_last.elapsed() >= self.spawn_cooldown{
                     self.draw_with_brush(point);
                     self.spawn_last = Instant::now();
@@ -93,6 +107,10 @@ impl App{
                 canvas(MyCanvas {
                     world: &self.world,
                     cache: &self.canvas_cache,
+
+                    mouse_pos: self.mouse_pos,
+                    brush_size: self.brush_size,
+                    actual_cell: self.actual_cell,
                 })
                 .width(iced::Fill)
                 .height(iced::Fill),
