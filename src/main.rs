@@ -105,9 +105,8 @@ impl App{
     fn subscription(_state: &Self) -> Subscription<Message> {
         time::every(Duration::from_millis(16)).map(|_| Message::Tick)
     }
-    pub fn particle_count(&self) -> usize{
-        self.world.particles.iter().filter(|&&c| c==self::world
-            ::Cell::Sand).count()
+    pub fn particle_count(&self) -> isize{
+        self.world.count_particles
     }
     pub fn draw_with_brush(&mut self, point: Point) {
         let center_x = (point.x/self.world.cell_size) as isize;
