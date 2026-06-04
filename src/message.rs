@@ -6,6 +6,7 @@ pub enum Message {
     CanvasMouseClick(Point),
     Tick,
     CanvasSendCommand(Command),
+    CanvasRemoveCell(Point),
 }
 
 #[derive(Debug, Clone, Copy)]

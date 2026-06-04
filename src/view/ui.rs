@@ -16,12 +16,13 @@ pub struct MyCanvas<'a> {
 }
 
 pub struct CanvasState {
-    pub is_clicked: bool,
+    pub is_clicked_left: bool,
+    pub is_clicked_right: bool,
 }
 
 impl Default for CanvasState {
     fn default() -> Self {
-        Self { is_clicked: false }
+        Self { is_clicked_left: false,is_clicked_right :false}
     }
 }
 
@@ -77,8 +78,17 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                 current_position.map(|point| on_cursor_click(point, _state))
             }
 
+            Mouse(MouseEvent::ButtonPressed(MouseButton::Right)) => {
+                current_position.map(|point| on_cursor_click_right(point, _state))
+            }
+
             Mouse(MouseEvent::ButtonReleased(MouseButton::Left)) => {
                 on_cursor_leave(_state);
+                None
+            }
+
+            Mouse(MouseEvent::ButtonReleased(MouseButton::Right)) => {
+                on_cursor_right_leave(_state);
                 None
             }
 
@@ -106,7 +116,7 @@ impl MyCanvas<'_>{
     }
 }
 fn on_cursor_moved(point: Point, state: &CanvasState) -> Action {
-    if state.is_clicked {
+    if state.is_clicked_left {
         canvas::Action::publish(Message::CanvasMouseClick(point))
     } else {
         canvas::Action::publish(Message::CanvasMouseMove(point))
@@ -114,18 +124,29 @@ fn on_cursor_moved(point: Point, state: &CanvasState) -> Action {
 }
 
 fn on_cursor_click(point: Point, state: &mut CanvasState) -> Action {
-    state.is_clicked = true;
+    state.is_clicked_left = true;
     canvas::Action::publish(Message::CanvasMouseClick(point))
 }
 
+fn on_cursor_click_right(point: Point, state: &mut CanvasState) -> Action {
+    state.is_clicked_right = true;
+    canvas::Action::publish(Message::CanvasRemoveCell(point))
+}
+
 fn on_cursor_leave(state: &mut CanvasState) {
-    state.is_clicked = false;
+    state.is_clicked_left = false;
+}
+
+fn on_cursor_right_leave(state: &mut CanvasState) {
+    state.is_clicked_right = false;
 }
 
 fn on_non_action(point: Option<Point>, state: &mut CanvasState) -> Option<Action> {
-    if state.is_clicked {
+    if state.is_clicked_left {
         point.map(|val| canvas::Action::publish(Message::CanvasMouseClick(val)))
-    } else {
+    } else if state.is_clicked_right{
+        point.map(|val| canvas::Action::publish(Message::CanvasRemoveCell(val)))
+    } else{
         None
     }
 }

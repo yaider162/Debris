@@ -58,6 +58,15 @@ impl App{
                     self.spawn_last = Instant::now();
                 }
             }
+            Message::CanvasRemoveCell(point) => {
+                let temp_cell=self.actual_cell;
+                self.actual_cell=world::Cell::Nothing;
+                if self.spawn_last.elapsed() >= self.spawn_cooldown{
+                    self.draw_with_brush(point);
+                    self.spawn_last = Instant::now();
+                }
+                self.actual_cell=temp_cell;
+            }
 
             Message::CanvasSendCommand(val)=>{
                 match val {
