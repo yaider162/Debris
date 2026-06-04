@@ -1,4 +1,4 @@
-use std::cell;
+use rand::random;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Cell {
@@ -33,11 +33,38 @@ impl World {
                 let idx = self.index(x, y);
                 let under = self.index(x, y+1);
 
-                // Si hay arena y el espacio de abajo estaba vacío en el estado anterior
-                if last[idx] == Cell::Sand && last[under] == Cell::Nothing {
-                    self.particles[idx]=Cell::Nothing;
-                    self.particles[under] = Cell::Sand;
+                // logica de movimiento
+                if last[idx]==Cell::Sand{
+                    // Para abajo
+                    if last[under]==Cell::Nothing{
+                        self.particles[idx]=Cell::Nothing;
+                        self.particles[under]=Cell::Sand;
+                        continue;
+                    }
+                    // Aleatoriamente miro por cual lado caer
+                    let directions = if random::<bool>() {
+                        [-1isize, 1]
+                    } else {
+                        [1, -1]
+                    };
+
+                    for dx in directions {
+                        let nx = x as isize + dx;
+
+                        if nx < 0 || nx >= self.width as isize {
+                            continue;
+                        }
+
+                        let diagonal = self.index(nx as usize, y + 1);
+
+                        if last[diagonal] == Cell::Nothing {
+                            self.particles[idx] = Cell::Nothing;
+                            self.particles[diagonal] = Cell::Sand;
+                            break;
+                        }
+                    }
                 }
+                
             }
         }
     }
