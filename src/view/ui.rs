@@ -40,22 +40,10 @@ impl canvas::Program<Message> for MyCanvas<'_> {
             for y in 0..self.world.height {
                 for x in 0..self.world.width {
                     let idx = self.world.index(x, y);
-
-                    let color = match self.world.particles[idx] {
-                        Cell::Nothing => continue,
-                        Cell::Sand => iced::Color::from_rgb(0.9, 0.8, 0.3),
-                        Cell::Wall => iced::Color::from_rgb(0.4, 0.4, 0.4),
-                    };
-
-                    let rect = canvas::Path::rectangle(
-                        iced::Point::new(
-                            x as f32 * self.world.cell_size,
-                            y as f32 * self.world.cell_size,
-                        ),
-                        iced::Size::new(self.world.cell_size, self.world.cell_size),
-                    );
-
-                    frame.fill(&rect, color);
+                    if let Some(color) = Self::cell_color(&self,self.world.particles[idx]){
+                        let rect = self.cell_rect(x, y);
+                        frame.fill(&rect, color);
+                    }
                 }
             }
         });
@@ -83,14 +71,32 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                 on_cursor_leave(_state);
                 None
             }
-
-            
-
             _ => None,
         }
     }
 }
 
+impl MyCanvas<'_>{
+    fn cell_color(&self, cell: Cell) -> Option<iced::Color>{
+        match cell {
+            Cell::Nothing => None,
+            Cell::Sand => Some(iced::Color::from_rgb(0.9, 0.8, 0.3)),
+            Cell::Wall => Some(iced::Color::from_rgb(0.4, 0.4, 0.4))
+        }
+    }
+    fn cell_rect(&self, x: usize, y: usize) -> canvas::Path {
+        canvas::Path::rectangle(
+            iced::Point::new(
+                x as f32 * self.world.cell_size,
+                y as f32 * self.world.cell_size,
+            ),
+            iced::Size::new(
+                self.world.cell_size,
+                self.world.cell_size,
+            ),
+        )
+    }
+}
 fn on_cursor_moved(point: Point, state: &CanvasState) -> Action {
     if state.is_clicked {
         canvas::Action::publish(Message::CanvasMouseClick(point))
