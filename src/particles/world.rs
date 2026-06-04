@@ -56,7 +56,7 @@ impl World {
                 if self.particles[idx] == Cell::Sand {
                     count += 1;
                     let under = self.index(x, y + 1);
-                    if self.particles[under] == Cell::Nothing {
+                    if self.particles_next[under] == Cell::Nothing {
                         self.particles_next[idx] = Cell::Nothing;
                         self.particles_next[under] = Cell::Sand;
                         continue;
