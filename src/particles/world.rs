@@ -76,6 +76,7 @@ impl World {
         std::mem::swap(&mut self.particles, &mut self.particles_next);
     }
 
+    // Originalmente era solo una cell la que spawneaba, ahora va a ser como un brush
     pub fn set_cell(&mut self, x:usize, y:usize, cell: Cell){
         if x < self.width && y < self.height {
             let idx = self.index(x, y);

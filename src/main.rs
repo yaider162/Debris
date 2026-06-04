@@ -1,5 +1,5 @@
 use iced::widget::{canvas,text};
-use iced::{Element};
+use iced::{Element, Point};
 use iced::{Subscription, time};
 
 use view::ui::{MyCanvas};
@@ -26,7 +26,10 @@ struct App{
 
     // Control de velocidad de caida de las particulas, pq se ve chimba
     spawn_last: Instant, // Hace cuanto nacio la ultima
-    spawn_cooldown: Duration // Cada cuanto deben nacer
+    spawn_cooldown: Duration, // Cada cuanto deben nacer
+
+    // Un pincel, este no es el tamaño como tal, es el radio q ocupa
+    brush_size: isize,
 }
 
 impl Default for App{
@@ -35,7 +38,8 @@ impl Default for App{
             canvas_cache: canvas::Cache::default(),
             actual_cell: world::Cell::Sand,
             spawn_last: Instant::now(),
-            spawn_cooldown: Duration::from_millis(50),
+            spawn_cooldown: Duration::from_millis(10),
+            brush_size: 2,
         }
     }
 }
@@ -50,19 +54,23 @@ impl App{
             Message::CanvasMouseMove(_point) => {}
             Message::CanvasMouseClick(point) => {
                 if self.spawn_last.elapsed() >= self.spawn_cooldown{
-                    let x = (point.x/self.world.cell_size) as usize;
-                    let y = (point.y/self.world.cell_size) as usize;
-
-                    self.world.set_cell(x, y, self.actual_cell);
-
+                    self.draw_with_brush(point);
                     self.spawn_last = Instant::now();
                 }
             }
 
             Message::CanvasSendCommand(val)=>{
-                self.actual_cell=match val{
-                    Command::SetSandCell=>world::Cell::Sand,
-                    Command::SetWallCell=>world::Cell::Wall,
+                match val {
+                    Command::SetSandCell => self.actual_cell = world::Cell::Sand,
+                    Command::SetWallCell => self.actual_cell = world::Cell::Wall,
+                    Command::IncreaseBrush => {
+                        // Limitamos el tamaño máximo para no congelar la CPU (ej. radio de 10 celdas)
+                        self.brush_size = (self.brush_size + 1).min(10);
+                    }
+                    Command::DecreaseBrush => {
+                        // Radio mínimo 0 (una sola celda)
+                        self.brush_size = (self.brush_size - 1).max(0);
+                    }
                 }
             }
         }
@@ -91,5 +99,43 @@ impl App{
     pub fn particle_count(&self) -> usize{
         self.world.particles.iter().filter(|&&c| c==self::world
             ::Cell::Sand).count()
+    }
+    pub fn draw_with_brush(&mut self, point: Point) {
+        let center_x = (point.x/self.world.cell_size) as isize;
+        let center_y = (point.y/self.world.cell_size) as isize;
+        let radius = self.brush_size;
+                    
+        for dy in -radius..=radius {
+            for dx in -radius..=radius {
+                
+                // (Para pincel redondo): 
+                // desmarcar la siguiente línea de la ecuación del círculo:
+                if dx*dx + dy*dy > radius*radius { continue; }
+
+                let x = center_x + dx;
+                let y = center_y + dy;
+
+                if x >= 0 && x < self.world.width as isize && y >= 0 && y < self.world.height as isize {
+
+                    let target_cell = iced::Point::new(x, y);
+                    let idx = self.world.index(target_cell.x as usize, target_cell.y as usize);
+                    let target_cell_value = self.world.particles[idx];
+
+                    // Cuando es arena, que tenga un pocco de aleatoriedad
+                    if self.actual_cell == world::Cell::Sand {
+                        if target_cell_value == world::Cell::Nothing{
+                            if rand::random::<f32>() > 0.3 {
+                                self.world.set_cell(x as usize, y as usize, self.actual_cell);
+                            }
+                        }
+                    } else {
+                        // Por ahora, este es cuando es pared
+                        if target_cell_value != world::Cell::Wall{
+                            self.world.set_cell(x as usize, y as usize, self.actual_cell);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

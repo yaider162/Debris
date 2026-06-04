@@ -12,4 +12,6 @@ pub enum Message {
 pub enum Command{
     SetSandCell,
     SetWallCell,
+    IncreaseBrush,
+    DecreaseBrush,
 }

@@ -85,7 +85,7 @@ impl canvas::Program<Message> for MyCanvas<'_> {
             Keyboard(KeyEvent::KeyPressed { key, .. }) => {
                 match key {
                     iced::keyboard::Key::Character(s) => {
-                       Some(on_option_key_pressed(s.as_str()))
+                        Some(on_option_key_pressed(s.as_str()))
                     }
                     _ => None,
                 }
@@ -134,7 +134,11 @@ fn on_option_key_pressed(s: &str) -> Action{
     canvas::Action::publish(Message::CanvasSendCommand(
         match s{
             "2"=>Command::SetWallCell,
-            _=>Command::SetSandCell,
+            "1"=>Command::SetSandCell,
+            "s" => Command::DecreaseBrush,
+            "w" => Command::IncreaseBrush,
+            
+            _=> Command::SetSandCell,
         }
     ))
 }
