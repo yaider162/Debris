@@ -6,7 +6,7 @@ use view::ui::{MyCanvas};
 use particles::world::World;
 use crate::particles::world;
 use crate::message::{Message,Command};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 // Módulos
 mod particles;
@@ -23,13 +23,19 @@ struct App{
     world:World,
     canvas_cache: canvas::Cache,
     actual_cell:world::Cell,
+
+    // Control de velocidad de caida de las particulas, pq se ve chimba
+    spawn_last: Instant, // Hace cuanto nacio la ultima
+    spawn_cooldown: Duration // Cada cuanto deben nacer
 }
 
 impl Default for App{
     fn default()->Self{
         Self{world:World::new(200,150, 4.0),
             canvas_cache: canvas::Cache::default(),
-            actual_cell: world::Cell::Sand 
+            actual_cell: world::Cell::Sand,
+            spawn_last: Instant::now(),
+            spawn_cooldown: Duration::from_millis(50),
         }
     }
 }
@@ -43,9 +49,14 @@ impl App{
             }
             Message::CanvasMouseMove(_point) => {}
             Message::CanvasMouseClick(point) => {
-                let x = (point.x/self.world.cell_size) as usize;
-                let y = (point.y/self.world.cell_size) as usize;
-                self.world.set_cell(x, y, self.actual_cell);
+                if self.spawn_last.elapsed() >= self.spawn_cooldown{
+                    let x = (point.x/self.world.cell_size) as usize;
+                    let y = (point.y/self.world.cell_size) as usize;
+
+                    self.world.set_cell(x, y, self.actual_cell);
+
+                    self.spawn_last = Instant::now();
+                }
             }
 
             Message::CanvasSendCommand(val)=>{
