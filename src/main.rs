@@ -27,7 +27,10 @@ struct App{
 
 impl Default for App{
     fn default()->Self{
-        Self{world:World::new(800,600), canvas_cache: canvas::Cache::default(),actual_cell: world::Cell::Sand }
+        Self{world:World::new(200,150, 4.0),
+            canvas_cache: canvas::Cache::default(),
+            actual_cell: world::Cell::Sand 
+        }
     }
 }
 

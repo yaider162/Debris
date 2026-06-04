@@ -9,14 +9,22 @@ pub enum Cell {
 
 pub struct World {
     pub particles: Vec<Cell>,
+    pub particles_next: Vec<Cell>,
     pub width: usize,
     pub height: usize,
     pub cell_size: f32
 }
 
 impl World {
-    pub fn new(width: usize, height:usize) -> Self {
-        Self { particles: vec![Cell::Nothing; width*height], width, height, cell_size: 1.0 }
+    pub fn new(width: usize, height:usize, cell_size: f32) -> Self {
+        let size = width*height;
+        Self { 
+            particles: vec![Cell::Nothing; size],
+            particles_next: vec![Cell::Nothing; size],
+            width,
+            height,
+            cell_size, 
+        }
     }
 
     // Funcion para indexar como 2d
@@ -25,50 +33,47 @@ impl World {
     }
 
     pub fn update(&mut self){
-        let last = self.particles.clone();
+        // Copio el estado actual, es más rapido que antes porque la memoria
+        // Ya está asignada papito
+        self.particles_next.copy_from_slice(&self.particles);
 
         // Itero de abajo a arriba para actualizar estado
         for y in (0..self.height-1).rev() {
             for x in 0..self.width {
-                let idx = self.index(x, y);
-                let under = self.index(x, y+1);
-                //let under_right = self.index(x+1,y+1);
-                //let under_left = self.index(x-1, y+1);
 
-                // logica de movimiento
-                if last[idx]==Cell::Sand{
-                    // Para abajo
-                    if last[under]==Cell::Nothing{
-                        self.particles[idx]=Cell::Nothing;
-                        self.particles[under]=Cell::Sand;
+                let idx = self.index(x, y);
+                if self.particles[idx] == Cell::Sand{
+                    let under = self.index(x, y+1);
+                    if self.particles[under]==Cell::Nothing{
+                        self.particles_next[idx]=Cell::Nothing;
+                        self.particles_next[under]=Cell::Sand;
                         continue;
                     }
-                    // Aleatoriamente miro por cual lado caer
-                    let directions = if random::<bool>() {
-                        [-1isize, 1]
-                    } else {
-                        [1, -1]
-                    };
+                    let directions = if random::<bool>() { [-1isize, 1] } else { [1, -1] };
 
                     for dx in directions {
                         let nx = x as isize + dx;
 
+                        // Validar límites horizontales
                         if nx < 0 || nx >= self.width as isize {
                             continue;
                         }
 
                         let diagonal = self.index(nx as usize, y + 1);
-                        //let over_diagonal = self.index(nx as usize, y); && last[over_diagonal]==Cell::Nothing
-                        if last[diagonal] == Cell::Nothing  {
-                            self.particles[idx] = Cell::Nothing;
-                            self.particles[diagonal] = Cell::Sand;
-                            break;
+                        
+                        // Revisamos en el estado siguiente si el espacio diagonal está libre
+                        // Se revisa el siguiente ole por si otra particula ya ocupó el espacio, la curren lo respete
+                        if self.particles_next[diagonal] == Cell::Nothing {
+                            self.particles_next[idx] = Cell::Nothing;
+                            self.particles_next[diagonal] = Cell::Sand;
+                            break; //salimos del bucle de direcciones
                         }
                     }
                 }
-                
             }
         }
+        // Les hago swap a los vec para que no ocupe mas memoria y en el siguiente frame particles sea el next
+        std::mem::swap(&mut self.particles, &mut self.particles_next);
     }
 
     pub fn set_cell(&mut self, x:usize, y:usize, cell: Cell){
