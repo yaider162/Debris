@@ -86,6 +86,7 @@ impl App{
                 match val {
                     Command::SetSandCell => self.actual_cell = world::Cell::Sand,
                     Command::SetWallCell => self.actual_cell = world::Cell::Wall,
+                    Command::SetWaterCell => self.actual_cell = world::Cell::Water,
                     Command::IncreaseBrush => {
                         // Limitamos el tamaño máximo para no congelar la CPU (ej. radio de 10 celdas)
                         self.brush_size = (self.brush_size + 1).min(10);
@@ -156,9 +157,14 @@ impl App{
                     } else if self.actual_cell == world::Cell::Nothing{
                         self.world.set_cell(x as usize, y as usize, self.actual_cell);
                     } 
-                    else {
+                    else if self.actual_cell== world::Cell::Wall{
                         // Por ahora, este es cuando es pared
                         if target_cell_value != world::Cell::Wall{
+                            self.world.set_cell(x as usize, y as usize, self.actual_cell);
+                        }
+                    }
+                    else if self.actual_cell==world::Cell::Water {
+                        if target_cell_value == world::Cell::Nothing{
                             self.world.set_cell(x as usize, y as usize, self.actual_cell);
                         }
                     }

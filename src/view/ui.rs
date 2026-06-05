@@ -160,7 +160,7 @@ impl MyCanvas<'_> {
             Cell::Nothing => None,
             Cell::Sand => Some(iced::Color::from_rgb(0.9, 0.8, 0.3)),
             Cell::Wall => Some(iced::Color::from_rgb(0.4, 0.4, 0.4)),
-            Cell::Water => Some(iced::Color::from_rgb(0.102, 0.241, 0.194)),
+            Cell::Water => Some(iced::Color::from_rgb(35.0/255.0, 195./255.0, 255.0/255.0)),
         }
     }
 }
@@ -202,6 +202,7 @@ fn on_non_action(point: Option<Point>, state: &mut CanvasState) -> Option<Action
 
 fn on_option_key_pressed(s: &str) -> Action {
     canvas::Action::publish(Message::CanvasSendCommand(match s {
+        "3" => Command::SetWaterCell,
         "2" => Command::SetWallCell,
         "1" => Command::SetSandCell,
         "s" => Command::DecreaseBrush,

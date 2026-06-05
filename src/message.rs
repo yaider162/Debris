@@ -11,6 +11,7 @@ pub enum Message {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Command{
+    SetWaterCell,
     SetSandCell,
     SetWallCell,
     IncreaseBrush,
