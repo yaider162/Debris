@@ -1,10 +1,11 @@
-use rand::random;
+use rand::{random};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Cell {
     Sand,
     Nothing,
     Wall,
+    Water,
 }
 
 pub struct World {
@@ -14,6 +15,7 @@ pub struct World {
     pub height: usize,
     pub cell_size: f32,
     pub count_particles: isize,
+    pub left_to_right: bool,
 }
 
 impl World {
@@ -26,6 +28,7 @@ impl World {
             height,
             cell_size,
             count_particles: 0,
+            left_to_right: true,
         }
     }
 
@@ -48,49 +51,64 @@ impl World {
                 0
             };
         }
-
         // Itero de abajo a arriba para actualizar estado
         for y in (0..self.height - 1).rev() {
-            for x in 0..self.width {
-                let idx = self.index(x, y);
-                if self.particles[idx] == Cell::Sand {
-                    count += 1;
-                    let under = self.index(x, y + 1);
-                    if self.particles_next[under] == Cell::Nothing {
-                        self.particles_next[idx] = Cell::Nothing;
-                        self.particles_next[under] = Cell::Sand;
-                        continue;
+            if self.left_to_right {
+                for x in 0..self.width {
+                    let idx = self.index(x, y);
+                    if self.particles[idx] == Cell::Sand {
+                        count += 1;
+                        self.update_sand(x, y, idx);
                     }
-                    let directions = if random::<bool>() {
-                        [-1isize, 1]
-                    } else {
-                        [1, -1]
-                    };
-
-                    for dx in directions {
-                        let nx = x as isize + dx;
-
-                        // Validar límites horizontales
-                        if nx < 0 || nx >= self.width as isize {
-                            continue;
-                        }
-
-                        let diagonal = self.index(nx as usize, y + 1);
-
-                        // Revisamos en el estado siguiente si el espacio diagonal está libre
-                        // Se revisa el siguiente ole por si otra particula ya ocupó el espacio, la curren lo respete
-                        if self.particles_next[diagonal] == Cell::Nothing {
-                            self.particles_next[idx] = Cell::Nothing;
-                            self.particles_next[diagonal] = Cell::Sand;
-                            break; //salimos del bucle de direcciones
-                        }
+                }
+            }else {
+                for x in (0..self.width).rev() {
+                    let idx = self.index(x, y);
+                    if self.particles[idx] == Cell::Sand {
+                        count += 1;
+                        self.update_sand(x, y, idx);
                     }
                 }
             }
         }
+        self.left_to_right = !self.left_to_right;
         // Les hago swap a los vec para que no ocupe mas memoria y en el siguiente frame particles sea el next
         std::mem::swap(&mut self.particles, &mut self.particles_next);
         self.count_particles = count;
+    }
+
+    // Actualizar la arena
+    pub fn update_sand(&mut self, x: usize, y:usize, idx:usize){
+        let under = self.index(x, y + 1);
+        if self.particles_next[under] == Cell::Nothing {
+            self.particles_next[idx] = Cell::Nothing;
+            self.particles_next[under] = Cell::Sand;
+            return;
+        }
+        let directions = if random::<bool>() {
+            [-1isize, 1]
+        } else {
+            [1, -1]
+        };
+
+        for dx in directions {
+            let nx = x as isize + dx;
+
+            // Validar límites horizontales
+            if nx < 0 || nx >= self.width as isize {
+                continue;
+            }
+
+            let diagonal = self.index(nx as usize, y + 1);
+
+            // Revisamos en el estado siguiente si el espacio diagonal está libre
+            // Se revisa el siguiente ole por si otra particula ya ocupó el espacio, la curren lo respete
+            if self.particles_next[diagonal] == Cell::Nothing {
+                self.particles_next[idx] = Cell::Nothing;
+                self.particles_next[diagonal] = Cell::Sand;
+                break; //salimos del bucle de direcciones
+            }
+        }
     }
 
     // Originalmente era solo una cell la que spawneaba, ahora va a ser como un brush

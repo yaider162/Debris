@@ -69,6 +69,7 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                     Cell::Nothing => iced::Color::TRANSPARENT,
                     Cell::Sand => iced::Color::from_rgba(0.9, 0.8, 0.3, 0.35),
                     Cell::Wall => iced::Color::from_rgba(0.4, 0.4, 0.4,0.35),
+                    Cell::Water => iced::Color::from_rgba(0.102, 0.241, 0.194, 0.35),
                 };
 
                 let radius = self.brush_size;
@@ -149,7 +150,8 @@ impl MyCanvas<'_>{
         match cell {
             Cell::Nothing => None,
             Cell::Sand => Some(iced::Color::from_rgb(0.9, 0.8, 0.3)),
-            Cell::Wall => Some(iced::Color::from_rgb(0.4, 0.4, 0.4))
+            Cell::Wall => Some(iced::Color::from_rgb(0.4, 0.4, 0.4)),
+            Cell::Water => Some(iced::Color::from_rgb(0.102, 0.241, 0.194)),
         }
     }
 }
