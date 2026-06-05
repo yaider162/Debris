@@ -33,44 +33,21 @@ impl World {
     }
 
     // Funcion para indexar como 2d
-    pub fn index(&self, x: usize, y: usize) -> usize {
-        y * self.width + x
-    }
+    #[inline]
+    pub fn index(&self, x: usize, y: usize) -> usize {y * self.width + x}
     // Funcion que se ejecuta 60x por frame
     pub fn update(&mut self) {
-        // Copio el estado actual, es más rapido que antes porque la memoria
-        // Ya está asignada papito
         self.particles_next.copy_from_slice(&self.particles);
-
         let mut count = 0;
-
         for i in 0..self.width {
-            count += if self.particles[self.index(i, self.height - 1)] == Cell::Sand {
-                1
-            } else {
-                0
-            };
+            if self.particles[self.index(i, self.height-1)]==Cell::Sand {count+=1}
         }
         // Itero de abajo a arriba para actualizar estado
         for y in (0..self.height - 1).rev() {
             if self.left_to_right {
-                for x in 0..self.width {
-                    let idx = self.index(x, y);
-                    match self.particles[idx] {
-                        Cell::Sand => {count+=1; self.update_sand(x, y, idx);}
-                        Cell::Water => {self.update_water(x, y, idx);}
-                        _ => {}
-                    }
-                }
-            }else {
-                for x in (0..self.width).rev() {
-                    let idx = self.index(x, y);
-                    match self.particles[idx] {
-                        Cell::Sand => {count+=1; self.update_sand(x, y, idx);}
-                        Cell::Water => {self.update_water(x, y, idx);}
-                        _ => {}
-                    }
-                }
+                for x in 0..self.width {self.update_cell(x, y, &mut count)}
+            }else{
+                for x in (0..self.width).rev() {self.update_cell(x, y, &mut count)}
             }
         }
         self.left_to_right = !self.left_to_right;
@@ -78,7 +55,22 @@ impl World {
         std::mem::swap(&mut self.particles, &mut self.particles_next);
         self.count_particles = count;
     }
-
+    
+    // Donde ejecuto todas las actualizaciones
+    #[inline]
+    pub fn update_cell(&mut self, x: usize, y: usize, count: &mut isize){
+        let idx = self.index(x, y);
+        match self.particles[idx] {
+            Cell::Sand => {
+                *count += 1;
+                self.update_sand(x, y, idx);
+            }
+            Cell::Water => {
+                self.update_water(x, y, idx);
+            }
+            _ => {}
+        }
+    }
     // Actualizar la arena
     pub fn update_sand(&mut self, x: usize, y:usize, idx:usize){
         let under = self.index(x, y + 1);
