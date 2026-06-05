@@ -72,7 +72,7 @@ impl canvas::Program<Message> for MyCanvas<'_> {
                     Cell::Nothing => iced::Color::TRANSPARENT,
                     Cell::Sand => iced::Color::from_rgba(0.9, 0.8, 0.3, 0.35),
                     Cell::Wall => iced::Color::from_rgba(0.4, 0.4, 0.4,0.35),
-                    Cell::Water => iced::Color::from_rgba(0.102, 0.241, 0.194, 0.35),
+                    Cell::Water => iced::Color::from_rgba(0.137, 0.764, 1.0, 0.35),
                 };
 
                 let radius = self.brush_size;
@@ -106,6 +106,7 @@ impl canvas::Program<Message> for MyCanvas<'_> {
         });
         vec![geometry]
     }
+    
     fn update(
         &self,
         _state: &mut Self::State,
@@ -160,14 +161,14 @@ impl MyCanvas<'_> {
             Cell::Nothing => None,
             Cell::Sand => Some(iced::Color::from_rgb(0.9, 0.8, 0.3)),
             Cell::Wall => Some(iced::Color::from_rgb(0.4, 0.4, 0.4)),
-            Cell::Water => Some(iced::Color::from_rgb(35.0/255.0, 195./255.0, 255.0/255.0)),
+            Cell::Water => Some(iced::Color::from_rgb(0.137, 0.764, 1.0)),
         }
     }
 }
 fn on_cursor_moved(point: Point, state: &CanvasState) -> Action {
     if state.is_clicked_left {
         canvas::Action::publish(Message::CanvasMouseClick(point))
-    } else {
+    }else {
         canvas::Action::publish(Message::CanvasMouseMove(point))
     }
 }
