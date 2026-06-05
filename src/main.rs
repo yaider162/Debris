@@ -56,27 +56,21 @@ impl App{
                 self.canvas_cache.clear();
             }
             Message::CanvasMouseMove(point) => {
-                let x = (point.x / self.world.cell_size) as isize;
-                let y = (point.y / self.world.cell_size) as isize;
-                self.mouse_pos = Some((x, y));
-                self.canvas_cache.clear();
+                self.update_mouse_pos(point);
             }
             Message::CanvasMouseClick(point) => {
-                
-                let x = (point.x / self.world.cell_size) as isize;
-                let y = (point.y / self.world.cell_size) as isize;
-                self.mouse_pos = Some((x, y));
-
+                self.update_mouse_pos(point);
                 if self.spawn_last.elapsed() >= self.spawn_cooldown{
-                    self.draw_with_brush(point);
+                    self.draw_with_brush(point, self.actual_cell);
                     self.spawn_last = Instant::now();
                 }
             }
             Message::CanvasRemoveCell(point) => {
+                self.update_mouse_pos(point);
                 let temp_cell=self.actual_cell;
                 self.actual_cell=world::Cell::Nothing;
                 if self.spawn_last.elapsed() >= self.spawn_cooldown{
-                    self.draw_with_brush(point);
+                    self.draw_with_brush(point, world::Cell::Nothing);
                     self.spawn_last = Instant::now();
                 }
                 self.actual_cell=temp_cell;
@@ -87,14 +81,8 @@ impl App{
                     Command::SetSandCell => self.actual_cell = world::Cell::Sand,
                     Command::SetWallCell => self.actual_cell = world::Cell::Wall,
                     Command::SetWaterCell => self.actual_cell = world::Cell::Water,
-                    Command::IncreaseBrush => {
-                        // Limitamos el tamaño máximo para no congelar la CPU (ej. radio de 10 celdas)
-                        self.brush_size = (self.brush_size + 1).min(10);
-                    }
-                    Command::DecreaseBrush => {
-                        // Radio mínimo 0 (una sola celda)
-                        self.brush_size = (self.brush_size - 1).max(0);
-                    }
+                    Command::IncreaseBrush => {self.brush_size = (self.brush_size + 1).min(10);}
+                    Command::DecreaseBrush => {self.brush_size = (self.brush_size - 1).max(0);}
                 }
             }
         }
@@ -103,7 +91,7 @@ impl App{
 
     fn view(&self)-> Element<'_, Message>{
         iced::widget::Column::new()
-            .push(text(format!("Partículas: {}", self.particle_count())))
+            .push(text(format!("Partículas: {}", self.world.count_particles)))
             .push(
                 canvas(MyCanvas {
                     world: &self.world,
@@ -124,52 +112,52 @@ impl App{
     fn subscription(_state: &Self) -> Subscription<Message> {
         time::every(Duration::from_millis(16)).map(|_| Message::Tick)
     }
-    pub fn particle_count(&self) -> isize{
-        self.world.count_particles
-    }
-    pub fn draw_with_brush(&mut self, point: Point) {
+
+    pub fn draw_with_brush(&mut self, point: Point, cell_to_place: world::Cell) {
         let center_x = (point.x/self.world.cell_size) as isize;
         let center_y = (point.y/self.world.cell_size) as isize;
         let radius = self.brush_size;
+
         for dy in -radius..=radius {
             for dx in -radius..=radius {
-                
-                // (Para pincel redondo): 
-                // desmarcar la siguiente línea de la ecuación del círculo:
-                if dx*dx + dy*dy > radius*radius { continue; }
+                if dx * dx + dy * dy > radius * radius { continue; }
 
                 let x = center_x + dx;
                 let y = center_y + dy;
 
                 if x >= 0 && x < self.world.width as isize && y >= 0 && y < self.world.height as isize {
+                    let idx = self.world.index(x as usize, y as usize);
+                    let current_tile = self.world.particles[idx];
 
-                    let target_cell = iced::Point::new(x, y);
-                    let idx = self.world.index(target_cell.x as usize, target_cell.y as usize);
-                    let target_cell_value = self.world.particles[idx];
-
-                    // Cuando es arena, que tenga un pocco de aleatoriedad
-                    if self.actual_cell == world::Cell::Sand {
-                        if target_cell_value == world::Cell::Nothing{
-                            if rand::random::<f32>() > 0.3 {
-                                self.world.set_cell(x as usize, y as usize, self.actual_cell);
+                    match cell_to_place {
+                        world::Cell::Nothing => {
+                            self.world.set_cell(x as usize, y as usize, world::Cell::Nothing);
+                        }
+                        world::Cell::Sand => {
+                            if current_tile == world::Cell::Nothing && rand::random::<f32>() > 0.3 {
+                                self.world.set_cell(x as usize, y as usize, cell_to_place);
                             }
                         }
-                    } else if self.actual_cell == world::Cell::Nothing{
-                        self.world.set_cell(x as usize, y as usize, self.actual_cell);
-                    } 
-                    else if self.actual_cell== world::Cell::Wall{
-                        // Por ahora, este es cuando es pared
-                        if target_cell_value != world::Cell::Wall{
-                            self.world.set_cell(x as usize, y as usize, self.actual_cell);
+                        world::Cell::Water => {
+                            if current_tile == world::Cell::Nothing {
+                                self.world.set_cell(x as usize, y as usize, cell_to_place);
+                            }
                         }
-                    }
-                    else if self.actual_cell==world::Cell::Water {
-                        if target_cell_value == world::Cell::Nothing{
-                            self.world.set_cell(x as usize, y as usize, self.actual_cell);
+                        world::Cell::Wall => {
+                            if current_tile != world::Cell::Wall {
+                                self.world.set_cell(x as usize, y as usize, cell_to_place);
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    fn update_mouse_pos(&mut self, point:Point){
+        let x = (point.x / self.world.cell_size) as isize;
+        let y = (point.y / self.world.cell_size) as isize;
+        self.mouse_pos = Some((x, y));
+        self.canvas_cache.clear();
     }
 }
