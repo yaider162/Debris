@@ -19,18 +19,10 @@ pub struct MyCanvas<'a> {
     pub actual_cell: Cell,
 }
 
+#[derive(Default)]
 pub struct CanvasState {
     pub is_clicked_left: bool,
     pub is_clicked_right: bool,
-}
-
-impl Default for CanvasState {
-    fn default() -> Self {
-        Self {
-            is_clicked_left: false,
-            is_clicked_right: false,
-        }
-    }
 }
 
 impl canvas::Program<Message> for MyCanvas<'_> {
