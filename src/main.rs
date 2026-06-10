@@ -55,8 +55,9 @@ impl App{
                 self.world.update();
                 self.canvas_cache.clear();
             }
-            Message::CanvasMouseMove(point) => {
-                self.update_mouse_pos(point);
+            Message::CanvasMouseMove(_point) => {
+                self.canvas_cache.clear();
+                // self.update_mouse_pos(point);
             }
             Message::CanvasMouseClick(point) => {
                 self.update_mouse_pos(point);
@@ -96,8 +97,6 @@ impl App{
                 canvas(MyCanvas {
                     world: &self.world,
                     cache: &self.canvas_cache,
-
-                    mouse_pos: self.mouse_pos,
                     brush_size: self.brush_size,
                     actual_cell: self.actual_cell,
                 })

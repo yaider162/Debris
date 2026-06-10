@@ -13,8 +13,6 @@ type Action = canvas::Action<Message>;
 pub struct MyCanvas<'a> {
     pub world: &'a World,
     pub cache: &'a Cache,
-
-    pub mouse_pos: Option<(isize, isize)>,
     pub brush_size: isize,
     pub actual_cell: Cell,
 }
@@ -58,7 +56,9 @@ impl canvas::Program<Message> for MyCanvas<'_> {
             }
 
             // Aqui dibujo otras cosas
-            if let Some((mx, my)) = self.mouse_pos {
+            if let Some(position) = _cursor.position_in(bounds) {
+                let mx = (position.x/self.world.cell_size) as isize;
+                let my = (position.y/self.world.cell_size) as isize;
                 // El color del placeholder
                 let color = match self.actual_cell {
                     Cell::Nothing => iced::Color::TRANSPARENT,
